@@ -1,0 +1,341 @@
+Digital ocean > droplet > snapshot alendro2022
+Paste addon di > /usr/lib/python3/dist-packages/odoo/addons
+Contabo
+
+
+Diagram
+https://niftypm.com/blog/project-charts/#
+
+Add Font times new roman
+sudo add-apt-repository multiverse
+sudo apt update && sudo apt install ttf-mscorefonts-installer
+sudo fc-cache -f -v
+
+sudo apt-get update && sudo apt-get upgrade
+
+Contabo 
+Ubah pake key buat ssh, jangan pake password
+https://contabo.com/blog/how-to-use-ssh-keys-with-your-server/#h-why-should-i-use-ssh-keys-instead-of-passwords
+mkdir /root/.ssh && cd /root/.ssh
+nano authorized_keys
+[copy key]
+nano /etc/ssh/sshd_config
+Ubah : jadi no (ctrl + w) untuk search
+ChallengeResponseAuthentication no
+PasswordAuthentication no
+UsePAM no
+[CTRL + X]
+reboot
+
+Install Odoo 
+Download dari sini :https://www.odoo.com/page/download
+Winscp ke server, upload filenya
+sudo apt install postgresql -y
+dpkg -i [file yg di upload]
+sudo apt-get install -f
+dpkg -i [file yg di upload]
+sudo apt-get update && sudo apt-get upgrade
+apt install python3-pip -y
+sudo pip3 install xlwt --root-user-action=ignore
+sudo pip3 install num2words --root-user-action=ignore
+sudo pip install PyPDF2==1.26.0 --root-user-action=ignore
+
+
+Install odoo v2
+https://www.odoo.com/documentation/16.0/administration/install/install.html#linux
+sudo apt install postgresql -y
+wget -q -O - https://nightly.odoo.com/odoo.key | sudo gpg --dearmor -o /usr/share/keyrings/odoo-archive-keyring.gpg
+
+
+echo 'deb [signed-by=/usr/share/keyrings/odoo-archive-keyring.gpg] https://nightly.odoo.com/16.0/nightly/deb/ ./' | sudo tee /etc/apt/sources.list.d/odoo.list
+
+
+sudo apt-get update && sudo apt-get install odoo
+sudo apt-get upgrade
+sudo apt install python3-pip -y
+
+
+sudo pip3 install xlwt --root-user-action=ignore
+sudo pip3 install num2words --root-user-action=ignore
+sudo pip install PyPDF2==1.26.0 --root-user-action=ignore
+
+
+Nginx & ssl odoo
+Pergi ke settingan dns, arahkan ke vps
+sudo apt update | sudo apt install nginx -y
+sudo apt install certbot -y
+systemctl stop nginx
+
+
+certbot certonly --standalone -d [nama web] --preferred-challenges http --agree-tos -n -m [email] --keep-until-expiring
+
+[copy lokasi certificate dan certificate key]
+nano  /etc/nginx/sites-enabled/odoo.conf
+
+
+#odoo server
+upstream odoo {
+server 127.0.0.1:8069;
+}
+upstream odoochat {
+server 127.0.0.1:8072;
+}
+ 
+# http -> https
+server {
+listen 80;
+server_name [nama web];
+rewrite ^(.*) https://$host$1 permanent;
+}
+ 
+server {
+listen 443;
+server_name [nama web];
+proxy_read_timeout 720s;
+proxy_connect_timeout 720s;
+proxy_send_timeout 720s;
+ 
+# Add Headers for odoo proxy mode
+proxy_set_header X-Forwarded-Host $host;
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+proxy_set_header X-Forwarded-Proto $scheme;
+proxy_set_header X-Real-IP $remote_addr;
+ 
+# SSL parameters
+ssl on;
+ssl_certificate [lokasi certificate];
+ssl_certificate_key [lokasi certificate];
+ 
+# log
+access_log /var/log/nginx/odoo.access.log;
+error_log /var/log/nginx/odoo.error.log;
+ 
+# Redirect longpoll requests to odoo longpolling port
+location /longpolling {
+proxy_pass http://odoochat;
+}
+ 
+# Redirect requests to odoo backend server
+location / {
+proxy_redirect off;
+proxy_pass http://odoo;
+}
+ 
+# common gzip
+gzip_types text/css text/scss text/plain text/xml application/xml application/json application/javascript;
+gzip on;
+}
+
+
+nano /etc/odoo/odoo.conf
+
+	
+Tambah ini ini:
+proxy_mode = True
+
+
+systemctl restart odoo
+systemctl start nginx 
+
+
+Renew certbot nginx
+systemctl stop nginx
+certbot certonly --standalone -d [nama web] --preferred-challenges http --agree-tos -n -m [email] --keep-until-expiring
+
+
+systemctl start nginx 
+
+
+
+Apache2 portforwarding
+Install apache
+sudo apt install apache2
+a2enmod proxy
+a2enmod proxy_http
+nano /etc/apache2/sites-available/odoo.conf
+
+
+Isi ini
+<VirtualHost *:80>
+ServerName [alamat web]
+ServerAlias [alamat web]
+ProxyRequests Off
+<Proxy *>
+Require all granted
+</Proxy>
+ProxyPass / http://[alamat web]:8069/
+ProxyPassReverse / http://[alamat web]:80>
+ErrorLog /var/log/apache2/error.log
+CustomLog /var/log/apache2/access.log combined
+<Location />
+Require all granted
+</Location> 
+</VirtualHost>
+
+
+reboot
+Cronjob untuk renew certbot
+
+
+
+Odoo 
+https://www.odoo.com/documentation/16.0/developer/iot.html
+https://www.odoo.com/documentation/16.0/administration.html
+https://www.odoo.com/documentation/16.0/applications/general/email_communication/email_servers.html
+
+
+
+Wkhtmltopdf di ssh 
+wget https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.jammy_amd64.deb
+
+
+apt-get -f install
+dpkg -i wk[tab]
+
+
+apt-get -f install
+sudo cp ./wkhtmltox/bin/wkhtmltoimage /usr/bin/
+sudo cp ./wkhtmltox/bin/wkhtmltopdf /usr/bin/
+
+
+
+(buka lewat alendrokupang@gmail.com)
+https://www.odoo.com/id_ID/slides/partnership-knowledge-base-39
+https://www.odoo.com/id_ID/slides/all?slide_category=certification
+https://www.odoo.com/id_ID/slides/getting-started-15
+
+
+SLA
+https://apps.odoo.com/apps/modules/16.0/project_task_sla/
+
+SNI
+https://sni-certification.com/?page_id=115
+
+Remove installed program dan configurations
+sudo apt-get remove nginx nginx-common
+sudo apt-get purge nginx nginx-common
+sudo apt-get autoremove
+sudo apt install nginx
+
+
+Odoo domain
+https://www.odoo.com/forum/help-1/domain-name-for-website-in-odoo-community-edition-152627
+
+
+
+Ubah warna website
+https://www.odoo.com/id_ID/forum/bantuan-1/how-can-i-change-the-odoo-basic-theme-color-v15-ee-203185
+Setting > technical > user interface > views 
+Create 
+View ray : custom_ray_odoo
+Type : Qweb
+Inherit : web layout
+Inheritance mode : extension view
+Code: ganti warna pake hex code
+
+
+<data inherit_id="web.layout">
+   <xpath expr="//body" position="inside">
+       <style>
+           .o_main_navbar {background-color: #5a7b87 !important;border-bottom: 0px;}
+           .o_main_navbar .show .dropdown-toggle {background-color: #5a7b87;}
+           .o_main_navbar > ul > li > a:hover, .o_main_navbar
+                  > ul > li > label:hover {background-color: #4a666f;}
+           .o_main_navbar > a:hover, .o_main_navbar > a:focus, .o_main_navbar
+                  > button:hover, .o_main_navbar
+                  > button:focus {background-color: #4a666f;color: inherit;}
+           .o_main_navbar > a:hover, .o_main_navbar > a:focus, .o_main_navbar
+                  > button:hover, .o_main_navbar
+                  > button:focus {background-color: #4a666f;color: inherit;}  
+       <style>
+   <xpath>
+<data>
+
+
+
+
+
+
+Change Title website
+Ssh ke cloud
+cd /usr/lib/python3/dist-packages/odoo/addons/web/static/src/webclient
+nano webclient.js
+Ubah 
+
+
+Export data
+Customer 
+Nama
+Alamat
+Product
+Internal reference
+Name
+Sales price
+Product type
+Invoice
+Number
+Invoice date
+Due date
+Payment terms
+Sales person
+Invoice line
+Product
+Quantity
+Taxes
+Unit price
+Partner name
+
+
+Update 3rd party apps
+Upload via winscp ke 
+/usr/lib/python3/dist-packages/odoo/addons
+
+Buka Putty
+cd /usr/lib/python3/dist-packages/odoo/addons
+
+Unzip file yg di upload
+Ke odoo > setting > Activate the developer mode (with tests assets)
+Ke Apps > Update Apps List > Update
+Cari apps > install
+
+
+
+
+
+
+
+
+
+Ngubah struktur Struk pos
+Ke 
+Cd /usr/lib/python3/dist-packages/odoo/addons/point_of_sale/static/src/xml/Screens/ReceiptScreen
+
+
+Buat sales order tidak bisa di edit setelah di validate
+Pergi ke
+Cd /usr/lib/python3/dist-/odoo/addons/sale/models/sale_order.py
+
+Nano filenya
+Ubah di baris ke : 844
+Di fuction 
+_prepare_confirmation_values
+‘State’: ‘done’
+
+
+
+
+
+Cari kata dalam file2 di linux
+ grep -ilR 'text’
+
+
+Ubah tulisan dalam bahasa indo
+Cd /usr/lib/python3/dist-packages/odoo/addons/point_of_sale/i18n/id.po
+Ctrl +w >> cari
+
+Ubah tampilan POS
+Cd /usr/lib/python3/dist-packages/odoo/addons/point_of_sale/static/src/xml/Screens/
+Ubah tampilan di halaman
+
+
+
