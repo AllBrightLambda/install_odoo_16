@@ -1,0 +1,25 @@
+sudo apt-get update
+sudo apt-get upgrade 
+sudo apt-get install -y
+
+sudo apt install postgresql -y
+wget -q -O - https://nightly.odoo.com/odoo.key | sudo gpg --dearmor -o /usr/share/keyrings/odoo-archive-keyring.gpg
+echo 'deb [signed-by=/usr/share/keyrings/odoo-archive-keyring.gpg] https://nightly.odoo.com/16.0/nightly/deb/ ./' | sudo tee /etc/apt/sources.list.d/odoo.list
+
+sudo apt-get update && sudo apt-get install odoo
+sudo apt-get upgrade
+sudo apt install python3-pip -y
+
+wget https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.jammy_amd64.deb
+
+apt-get -f install
+dpkg -i wkhtmltox_0.12.6.1-2.jammy_amd64.deb
+apt-get -f install
+sudo cp ./wkhtmltox/bin/wkhtmltoimage /usr/bin/
+sudo cp ./wkhtmltox/bin/wkhtmltopdf /usr/bin/
+
+
+#https
+sudo apt update | sudo apt install nginx -y
+sudo apt install certbot -y
+systemctl stop nginx
